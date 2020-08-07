@@ -371,6 +371,12 @@ declare module 'botpress/sdk' {
         reduce?: boolean
       }
 
+      export interface LinearOptions {
+        c?: number | number[]
+        probability?: boolean
+        reduce?: boolean
+      }
+
       export interface DataPoint {
         label: string
         coordinates: number[]
@@ -392,6 +398,19 @@ declare module 'botpress/sdk' {
       }
 
       export class Predictor {
+        constructor(model: string)
+        predict(coordinates: number[]): Promise<Prediction[]>
+        isLoaded(): boolean
+        getLabels(): string[]
+      }
+
+      export class LinearTrainer {
+        constructor()
+        train(points: DataPoint[], options?: Partial<LinearOptions>, callback?: TrainProgressCallback): Promise<string>
+        isTrained(): boolean
+      }
+
+      export class LinearPredictor {
         constructor(model: string)
         predict(coordinates: number[]): Promise<Prediction[]>
         isLoaded(): boolean

@@ -259,11 +259,11 @@ const TrainIntentClassifier = async (
       progress(1 / input.ctxToTrain.length)
       continue
     }
-    const svm = new tools.mlToolkit.SVM.Trainer()
+    const svm = new tools.mlToolkit.SVM.LinearTrainer()
 
     let model: string
     try {
-      model = await svm.train(points, { kernel: 'LINEAR', classifier: 'C_SVC' }, p => {
+      model = await svm.train(points, {}, p => {
         const completion = (i + p) / input.ctxToTrain.length
         progress(completion)
       })
@@ -305,11 +305,11 @@ const TrainContextClassifier = async (
     return ''
   }
 
-  const svm = new tools.mlToolkit.SVM.Trainer()
+  const svm = new tools.mlToolkit.SVM.LinearTrainer()
 
   let model: string
   try {
-    model = await svm.train(points, { kernel: 'LINEAR', classifier: 'C_SVC' }, p => {
+    model = await svm.train(points, {}, p => {
       progress(_.round(p, 1))
     })
   } catch (err) {
@@ -490,10 +490,8 @@ const TrainOutOfScope = async (
   progress: progressCB
 ): Promise<_.Dictionary<string> | undefined> => {
   debugTraining.forBot(input.botId, 'Training out of scope classifier')
-  const trainingOptions: sdk.MLToolkit.SVM.SVMOptions = {
-    c: [10], // so there's no grid search
-    kernel: 'LINEAR',
-    classifier: 'C_SVC'
+  const trainingOptions: sdk.MLToolkit.SVM.LinearOptions = {
+    c: [10] // so there's no grid search
   }
 
   const noneUtts = _.chain(input.intents)
@@ -516,7 +514,7 @@ const TrainOutOfScope = async (
       .flatMap(i => featurizeInScopeUtterances(i.utterances, i.name))
       .value()
 
-    const svm = new tools.mlToolkit.SVM.Trainer()
+    const svm = new tools.mlToolkit.SVM.LinearTrainer()
     let model: string
     try {
       model = await svm.train([...in_ctx_scope_points, ...oos_points], trainingOptions, p => {

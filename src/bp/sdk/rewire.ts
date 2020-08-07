@@ -54,6 +54,7 @@ const nativeExtensions = [
   'crfsuite.node',
   'fasttext.node',
   'node-svm.node',
+  'node-linear.node',
   'sentencepiece.node'
 ]
 

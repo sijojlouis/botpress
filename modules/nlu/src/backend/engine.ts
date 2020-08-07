@@ -245,14 +245,14 @@ export default class Engine implements NLUEngine {
     }
 
     const { ctx_model, intent_model_by_ctx, oos_model } = output
-    const ctx_classifier = ctx_model ? new tools.mlToolkit.SVM.Predictor(ctx_model) : undefined
+    const ctx_classifier = ctx_model ? new tools.mlToolkit.SVM.LinearPredictor(ctx_model) : undefined
     const intent_classifier_per_ctx = _.toPairs(intent_model_by_ctx).reduce(
-      (c, [ctx, intentModel]) => ({ ...c, [ctx]: new tools.mlToolkit.SVM.Predictor(intentModel as string) }),
-      {} as _.Dictionary<MLToolkit.SVM.Predictor>
+      (c, [ctx, intentModel]) => ({ ...c, [ctx]: new tools.mlToolkit.SVM.LinearPredictor(intentModel as string) }),
+      {} as _.Dictionary<MLToolkit.SVM.LinearPredictor>
     )
     const oos_classifier = _.toPairs(oos_model).reduce(
-      (c, [ctx, mod]) => ({ ...c, [ctx]: new tools.mlToolkit.SVM.Predictor(mod) }),
-      {} as _.Dictionary<MLToolkit.SVM.Predictor>
+      (c, [ctx, mod]) => ({ ...c, [ctx]: new tools.mlToolkit.SVM.LinearPredictor(mod) }),
+      {} as _.Dictionary<MLToolkit.SVM.LinearPredictor>
     )
     const slot_tagger = new SlotTagger(tools.mlToolkit)
     slot_tagger.load(output.slots_model)

@@ -18,9 +18,9 @@ export type ExactMatchResult = (sdk.MLToolkit.SVM.Prediction & { extractor: 'exa
 export type Predictors = TrainOutput &
   EntityPredictor &
   Partial<{
-    ctx_classifier: sdk.MLToolkit.SVM.Predictor
-    intent_classifier_per_ctx: _.Dictionary<sdk.MLToolkit.SVM.Predictor>
-    oos_classifier_per_ctx: _.Dictionary<sdk.MLToolkit.SVM.Predictor>
+    ctx_classifier: sdk.MLToolkit.SVM.LinearPredictor
+    intent_classifier_per_ctx: _.Dictionary<sdk.MLToolkit.SVM.LinearPredictor>
+    oos_classifier_per_ctx: _.Dictionary<sdk.MLToolkit.SVM.LinearPredictor>
     kmeans: sdk.MLToolkit.KMeans.KmeansResult
     slot_tagger: SlotTagger // TODO replace this by MlToolkit.CRF.Tagger
   }>

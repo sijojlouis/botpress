@@ -1,10 +1,11 @@
 import * as sdk from 'botpress/sdk'
 import _ from 'lodash'
 
+import { Trainer as LinearTrainer } from './linear'
 import { Trainer } from './svm'
 
 export class SVMTrainingPool {
-  private currentSvms: _.Dictionary<Trainer> = {}
+  private currentSvms: _.Dictionary<Trainer | LinearTrainer> = {}
 
   public async startTraining(
     trainingId: string,
@@ -12,14 +13,15 @@ export class SVMTrainingPool {
     options: Partial<sdk.MLToolkit.SVM.SVMOptions>,
     progress: sdk.MLToolkit.SVM.TrainProgressCallback | undefined,
     complete: (model: string) => void,
-    error: (error: Error) => void
+    error: (error: Error) => void,
+    linear?: boolean
   ) {
     if (!!this.currentSvms[trainingId]) {
       error(new Error('this exact training was already started'))
       return
     }
 
-    this.currentSvms[trainingId] = new Trainer()
+    this.currentSvms[trainingId] = linear ? new LinearTrainer() : new Trainer()
     try {
       const result = await this.currentSvms[trainingId].train(points, options, progress)
       complete(result)

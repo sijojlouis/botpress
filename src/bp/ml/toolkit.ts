@@ -7,16 +7,18 @@ import nanoid from 'nanoid'
 import { registerMsgHandler, spawnMLWorkers, WORKER_TYPES } from '../cluster'
 
 import { Tagger, Trainer as CRFTrainer } from './crf'
+import { CRFTrainingPool } from './crf-pool'
 import { FastTextModel } from './fasttext'
 import computeJaroWinklerDistance from './homebrew/jaro-winkler'
 import computeLevenshteinDistance from './homebrew/levenshtein'
+import { Predictor as LinearPredictor, Trainer as LinearTrainer } from './linear'
 import { processor } from './sentencepiece'
 import { Predictor, Trainer as SVMTrainer } from './svm'
 import { SVMTrainingPool } from './svm-pool'
-import { CRFTrainingPool } from './crf-pool'
 
 type MsgType =
   | 'svm_train'
+  | 'svm_train_linear'
   | 'svm_progress'
   | 'svm_done'
   | 'svm_error'
@@ -48,7 +50,9 @@ const MLToolkit: typeof sdk.MLToolkit = {
   },
   SVM: {
     Predictor,
-    Trainer: SVMTrainer
+    Trainer: SVMTrainer,
+    LinearPredictor,
+    LinearTrainer
   },
   FastText: { Model: FastTextModel },
   Strings: { computeLevenshteinDistance, computeJaroWinklerDistance },
@@ -56,7 +60,7 @@ const MLToolkit: typeof sdk.MLToolkit = {
 }
 
 function overloadTrainers() {
-  MLToolkit.SVM.Trainer.prototype.train = (
+  const trainer = (type: 'svm' | 'linear') => (
     points: sdk.MLToolkit.SVM.DataPoint[],
     options?: Partial<sdk.MLToolkit.SVM.SVMOptions>,
     progressCb?: sdk.MLToolkit.SVM.TrainProgressCallback | undefined
@@ -93,10 +97,14 @@ function overloadTrainers() {
         }
       }
 
-      process.send!({ type: 'svm_train', id, payload: { points, options } })
+      const eventType: MsgType = type === 'linear' ? 'svm_train_linear' : 'svm_train'
+      process.send!({ type: eventType, id, payload: { points, options } })
       process.on('message', messageHandler)
     })
   }
+
+  MLToolkit.SVM.Trainer.prototype.train = trainer('svm')
+  MLToolkit.SVM.LinearTrainer.prototype.train = trainer('linear')
 
   MLToolkit.CRF.Trainer.prototype.train = (
     elements: sdk.MLToolkit.CRF.DataPoint[],
@@ -148,7 +156,7 @@ if (cluster.isWorker) {
     const svmPool = new SVMTrainingPool() // one svm pool per ml worker
     const crfPool = new CRFTrainingPool()
     async function messageHandler(msg: Message) {
-      if (msg.type === 'svm_train') {
+      if (msg.type === 'svm_train' || msg.type === 'svm_train_linear') {
         let svmProgressCalls = 0
 
         // tslint:disable-next-line: no-floating-promises
@@ -162,7 +170,8 @@ if (cluster.isWorker) {
             }
           },
           result => process.send!({ type: 'svm_done', id: msg.id, payload: { result } }),
-          error => process.send!({ type: 'svm_error', id: msg.id, payload: { error } })
+          error => process.send!({ type: 'svm_error', id: msg.id, payload: { error } }),
+          msg.type === 'svm_train_linear'
         )
       }
 
@@ -233,6 +242,7 @@ if (cluster.isMaster) {
   registerMsgHandler('svm_progress', sendToWebWorker)
   registerMsgHandler('svm_error', sendToWebWorker)
   registerMsgHandler('svm_train', async (msg: Message) => (await pickMLWorker()).send(msg))
+  registerMsgHandler('svm_train_linear', async (msg: Message) => (await pickMLWorker()).send(msg))
   registerMsgHandler('svm_kill', async (msg: Message) => getMLWorker(msg.workerPid)?.send(msg))
 
   registerMsgHandler('crf_done', sendToWebWorker)
