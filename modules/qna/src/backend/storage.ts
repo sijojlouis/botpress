@@ -163,6 +163,13 @@ export default class Storage {
     return qnaPerTopic
   }
 
+  async deleteAllItems(topicName: string): Promise<void> {
+    const qnaFileName = toQnaFile(topicName)
+    if (await this.ghost.fileExists(FLOW_FOLDER, qnaFileName)) {
+      return this.ghost.deleteFile(FLOW_FOLDER, toQnaFile(topicName))
+    }
+  }
+
   async deleteSingleItem(topicName: string, itemId: string) {
     await this.ensureIntentsFileExists(topicName)
     const intents = await this.ghost.readFileAsObject<Intent[]>(FLOW_FOLDER, toQnaFile(topicName))

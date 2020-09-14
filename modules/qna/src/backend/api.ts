@@ -41,6 +41,17 @@ export default async (bp: typeof sdk, bots: ScopedBots) => {
   )
 
   router.post(
+    '/:topicName/questions/delete',
+    asyncMiddleware(async (req: Request, res: Response, next: Function) => {
+      const { botId, topicName } = req.params
+      const { storage } = bots[botId]
+
+      await storage.deleteAllItems(topicName)
+      res.send(200)
+    })
+  )
+
+  router.post(
     '/:topicName/questions',
     asyncMiddleware(async (req: Request, res: Response, next: Function) => {
       const { storage } = bots[req.params.botId]

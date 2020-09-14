@@ -133,8 +133,9 @@ const TopicList: FC<Props> = props => {
       skipDialog ||
       (await confirmDialog(lang.tr('studio.flow.topicList.confirmDeleteTopic'), { acceptLabel: lang.tr('delete') }))
     ) {
-      await axios.post(`${window.BOT_API_PATH}/deleteTopic/${name}`)
       flowsToDelete.forEach(flow => props.deleteFlow(flow.name))
+      await axios.post(`${window.BOT_API_PATH}/mod/qna/${name}/questions/delete`)
+      await axios.post(`${window.BOT_API_PATH}/deleteTopic/${name}`)
       props.fetchTopics()
 
       if (name === props.selectedTopic) {
