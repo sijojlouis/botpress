@@ -392,8 +392,8 @@ export class FlowService {
     let topics = await this.getTopics(botId)
     topics = topics.filter(x => x.name !== topicName)
 
+    await this.ghost.forBot(botId).deleteFolder(`${FLOW_DIR}/${topicName}`)
     await this.ghost.forBot(botId).upsertFile('ndu', `topics.json`, JSON.stringify(topics, undefined, 2))
-    await this.moduleLoader.onTopicChanged(botId, topicName, undefined)
   }
 
   public async createTopic(botId: string, topic: Topic) {

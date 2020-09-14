@@ -469,6 +469,13 @@ export const fetchTopics = () => dispatch => {
     dispatch(topicsReceived(data))
   })
 }
+export const deleteTopic = topicName => (dispatch, getState) => {
+  const { ndu } = getState()
+  // tslint:disable-next-line: no-floating-promises
+  axios.post(`${window.BOT_API_PATH}/topics/${topicName}/delete`).then(() => {
+    dispatch(topicsReceived(ndu.topics.filter(t => t.name !== topicName)))
+  })
+}
 
 export const receiveLibrary = createAction('LIBRARY/RECEIVED')
 export const refreshLibrary = () => (dispatch, getState) => {
