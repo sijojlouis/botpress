@@ -1,36 +1,38 @@
 import { Button, Icon } from '@blueprintjs/core'
-import { lang } from 'botpress/shared'
+import { lang, ToolTip } from 'botpress/shared'
 import cx from 'classnames'
 import React, { FC, Fragment, useState } from 'react'
 
 import style from './style.scss'
 interface Props {
+  languages: string[]
   defaultLanguage: string
   name: string
   qnas: any[]
+  powerMode: boolean
 }
 
-const TopicItem: FC<Props> = ({ qnas, name, defaultLanguage }) => {
-  const [expanded, setExpanded] = useState(false)
+const TopicItem: FC<Props> = ({ qnas, name, defaultLanguage, languages, powerMode }) => {
+  const [expanded, setExpanded] = useState(true)
+  const [expandedLangs, setExpandedLangs] = useState({
+    ...languages.reduce((acc, lang) => ({ ...acc, [lang]: true }), {})
+  })
   const missingTranslation = false
   const { questions, answers } = qnas.reduce(
-    (acc, qna) => {
-      // console.log(qna.questions, qna.answers)
-      return {
-        questions: {
-          ...Object.keys(qna.questions).reduce(
-            (obj, lang) => ({ ...obj, [lang]: [...(acc.questions[lang] || []), ...(qna.questions[lang] || [])] }),
-            acc.questions
-          )
-        },
-        answers: {
-          ...Object.keys(qna.answers).reduce(
-            (obj, lang) => ({ ...obj, [lang]: [...(acc.answers[lang] || []), ...(qna.answers[lang] || [])] }),
-            acc.answers
-          )
-        }
+    (acc, qna) => ({
+      questions: {
+        ...Object.keys(qna.questions).reduce(
+          (obj, lang) => ({ ...obj, [lang]: [...(acc.questions[lang] || []), ...(qna.questions[lang] || [])] }),
+          acc.questions
+        )
+      },
+      answers: {
+        ...Object.keys(qna.answers).reduce(
+          (obj, lang) => ({ ...obj, [lang]: [...(acc.answers[lang] || []), ...(qna.answers[lang] || [])] }),
+          acc.answers
+        )
       }
-    },
+    }),
     { questions: {}, answers: {} }
   )
   const totals = {
@@ -40,6 +42,71 @@ const TopicItem: FC<Props> = ({ qnas, name, defaultLanguage }) => {
 
   if (!totals.questions && !totals.answers) {
     return null
+  }
+
+  const toggleLang = lang => {
+    setExpandedLangs({ ...expandedLangs, [lang]: !expandedLangs[lang] })
+  }
+
+  languages = languages.filter(lang => lang !== defaultLanguage)
+
+  if (powerMode) {
+    return (
+      <Fragment>
+        <div className={cx(style.lineWrapper, style.collapsibleWrapper)}>
+          <span className={cx(style.growItem, style.label)}>{lang.tr(`isoLangs.${defaultLanguage}.name`)}</span>
+          {languages.map(language => (
+            <Button
+              minimal
+              icon={expandedLangs[language] ? 'caret-right' : 'caret-left'}
+              className={cx(style.growItem, style.label, { [style.collapsed]: !expandedLangs[language] })}
+              key={language}
+              onClick={() => toggleLang(language)}
+            >
+              {expandedLangs[language] ? (
+                lang.tr(`isoLangs.${language}.name`)
+              ) : (
+                <ToolTip content={lang.tr(`isoLangs.${language}.name`)}>
+                  <span>{language}</span>
+                </ToolTip>
+              )}
+            </Button>
+          ))}
+        </div>
+        <div className={style.collapsibleWrapper}>
+          <div>
+            <div key={`questions-${lang}`}>
+              {questions[defaultLanguage]?.map((question, index) => (
+                <div className={style.lineWrapper} key={`questions-${lang}-${question}`}>
+                  <span className={style.growItem}>
+                    <input value={question} />
+                  </span>
+                  {languages.map(language => (
+                    <span className={cx(style.growItem, { [style.collapsed]: !expandedLangs[language] })}>
+                      <input key={`questions-${lang}-${question}`} value={questions[language]?.[index] || ''} />
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <div key={`answers-${lang}`}>
+              {answers[defaultLanguage]?.map((answer, index) => (
+                <div className={style.lineWrapper} key={`answers-${lang}-${answer}`}>
+                  <span className={style.growItem}>
+                    <input value={answer} />
+                  </span>
+                  {languages.map(language => (
+                    <span className={style.growItem}>
+                      <input key={`answers-${lang}-${answer}`} value={answers[language]?.[index] || ''} />
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Fragment>
+    )
   }
 
   return (
@@ -60,32 +127,66 @@ const TopicItem: FC<Props> = ({ qnas, name, defaultLanguage }) => {
         </Button>
       </div>
       {expanded && (
-        <Fragment>
+        <div>
+          <div className={cx(style.lineWrapper, style.collapsibleWrapper)}>
+            <span className={cx(style.growItem, style.label)}>{lang.tr(`isoLangs.${defaultLanguage}.name`)}</span>
+            {languages.map(language => (
+              <Button
+                minimal
+                icon={expandedLangs[language] ? 'caret-right' : 'caret-left'}
+                className={cx(style.growItem, style.label, { [style.collapsed]: !expandedLangs[language] })}
+                key={language}
+                onClick={() => toggleLang(language)}
+              >
+                {expandedLangs[language] ? (
+                  lang.tr(`isoLangs.${language}.name`)
+                ) : (
+                  <ToolTip content={lang.tr(`isoLangs.${language}.name`)}>
+                    <span>{language}</span>
+                  </ToolTip>
+                )}
+              </Button>
+            ))}
+          </div>
           <div className={style.collapsibleWrapper}>
             <div>
               <h2>Questions</h2>
-              {Object.keys(questions).map(lang => (
-                <ul key={`questions-${lang}`}>
-                  {questions[lang]?.map(question => (
-                    <li key={`questions-${lang}-${question}`}>{question}</li>
-                  ))}
-                </ul>
-              ))}
+              <div key={`questions-${lang}`}>
+                {questions[defaultLanguage]?.map((question, index) => (
+                  <div className={style.lineWrapper} key={`questions-${lang}-${question}`}>
+                    <span className={style.growItem}>
+                      <input value={question} />
+                    </span>
+                    {languages.map(language => (
+                      <span className={cx(style.growItem, { [style.collapsed]: !expandedLangs[language] })}>
+                        <input key={`questions-${lang}-${question}`} value={questions[language]?.[index] || ''} />
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
           <div className={style.collapsibleWrapper}>
             <div>
               <h2>Answers</h2>
-              {Object.keys(answers).map(lang => (
-                <ul key={`answers-${lang}`}>
-                  {answers[lang]?.map(answer => (
-                    <li key={`questions-${lang}-${answer}`}>{answer}</li>
-                  ))}
-                </ul>
-              ))}
+              <div key={`answers-${lang}`}>
+                {answers[defaultLanguage]?.map((answer, index) => (
+                  <div className={style.lineWrapper} key={`answers-${lang}-${answer}`}>
+                    <span className={style.growItem}>
+                      <input value={answer} />
+                    </span>
+                    {languages.map(language => (
+                      <span className={style.growItem}>
+                        <input key={`answers-${lang}-${answer}`} value={answers[language]?.[index] || ''} />
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </Fragment>
+        </div>
       )}
     </div>
   )

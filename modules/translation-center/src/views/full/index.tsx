@@ -10,6 +10,7 @@ import TopicItem from './TopicItem'
 const TC_TAB_KEY = `bp::${window['BOT_ID']}::tcTab`
 
 const TranslationCenter: FC<any> = ({ bp, defaultLanguage, languages }) => {
+  const [powerMode, setPowerMode] = useState(false)
   const [flows, setFlows] = useState([])
   const [topics, setTopics] = useState([])
   const [qnas, setQnas] = useState({})
@@ -44,9 +45,17 @@ const TranslationCenter: FC<any> = ({ bp, defaultLanguage, languages }) => {
       .catch(() => {})
   }
 
-  const tabs = [{ id: 'qna', title: lang.tr('module.qna.fullName') }]
+  const tabs = [{ id: 'translation-center', title: lang.tr('module.translation-center.fullName') }]
 
-  const buttons: HeaderButtonProps[] = []
+  const buttons: HeaderButtonProps[] = [
+    {
+      icon: powerMode ? 'th' : 'list',
+      onClick: () => setPowerMode(!powerMode),
+      tooltip: lang.tr(
+        powerMode ? 'module.translation-center.enterSortedMode' : 'module.translation-center.enterPowerMode'
+      )
+    }
+  ]
 
   return (
     <MainContent.Wrapper>
@@ -86,8 +95,10 @@ const TranslationCenter: FC<any> = ({ bp, defaultLanguage, languages }) => {
               <div>
                 {topics.map(({ name }, index) => (
                   <TopicItem
+                    powerMode={powerMode}
                     key={`${name}-${index}`}
                     defaultLanguage={defaultLanguage}
+                    languages={languages}
                     name={name}
                     qnas={qnas[name]?.items || []}
                   />

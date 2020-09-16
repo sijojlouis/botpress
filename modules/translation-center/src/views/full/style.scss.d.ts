@@ -2,14 +2,18 @@
 // Please do not change this file!
 interface CssExports {
   'addBtn': string;
+  'collapsed': string;
   'collapsibleWrapper': string;
   'content': string;
   'contentAnswerWrapper': string;
   'empty': string;
+  'growItem': string;
   'header': string;
   'headerWrapper': string;
   'items': string;
+  'label': string;
   'left': string;
+  'lineWrapper': string;
   'questionHeader': string;
   'questionWrapper': string;
   'refTitle': string;
