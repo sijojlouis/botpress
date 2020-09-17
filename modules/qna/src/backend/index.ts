@@ -28,12 +28,23 @@ const onModuleUnmount = async (bp: typeof sdk) => {
   bp.http.deleteRouterForBot('qna')
 }
 
+const onTopicChanged = async (bp: typeof sdk, botId: string, oldName?: string, newName?: string) => {
+  const isRenaming = !!(oldName && newName)
+  if (!isRenaming) {
+    return
+  }
+
+  const { storage } = bots[botId]
+  await storage.moveToAnotherTopic(oldName, newName)
+}
+
 const entryPoint: sdk.ModuleEntryPoint = {
-  onServerStarted,
-  onServerReady,
   onBotMount,
   onBotUnmount,
+  onServerReady,
+  onTopicChanged,
   onModuleUnmount,
+  onServerStarted,
   translations: { en, fr },
   definition: {
     name: 'qna',
